@@ -1,5 +1,5 @@
 # RUNA
-> run as
+> run as  
 a privilage escalation program inpired by doas (opendoas).
 
 (i use to tracing the main function of opendoas)
