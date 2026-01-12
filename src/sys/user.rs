@@ -48,7 +48,7 @@ pub fn get_uid() -> Uid {
 pub fn get_gid() -> Gid {
     let raw = unsafe { libc::getgid() };
 
-    Gid(raw)
+    Gid(raw as u32)
 }
 
 pub fn get_effective_uid() -> Uid {
@@ -60,16 +60,16 @@ unsafe fn c_str_to_string(ptr: *const libc::c_char) -> String {
     if ptr.is_null() {
         return String::new();
     }
-    CStr::from_ptr(ptr).to_string_lossy().into_owned()
+    unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() }
 }
 
 unsafe fn passwd_to_user(pw: libc::passwd) -> User {
     User {
-        name: c_str_to_string(pw.pw_name),
+        name: unsafe { c_str_to_string(pw.pw_name) },
         uid: Uid(pw.pw_uid as u32),
         gid: Gid(pw.pw_gid as u32),
-        shell: c_str_to_string(pw.pw_shell),
-        dir: c_str_to_string(pw.pw_dir),
+        shell: unsafe { c_str_to_string(pw.pw_shell) },
+        dir: unsafe { c_str_to_string(pw.pw_dir) },
     }
 }
 pub fn get_user_by_uid(uid: Uid) -> io::Result<User> {
@@ -100,4 +100,24 @@ pub fn get_user_by_name(name: &str) -> io::Result<User> {
         }
         Ok(passwd_to_user(*pw_ptr))
     }
+}
+
+pub fn get_groups() -> io::Result<Vec<Gid>> {
+    // i choose 256 as NGROUPS_MAX
+    let mut groups_buffer = vec![0 as gid_t; 256];
+    let count = unsafe { libc::getgroups(groups_buffer.len() as i32, groups_buffer.as_mut_ptr()) };
+    if count < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    let mut groups: Vec<Gid> = groups_buffer[..count as usize]
+        .iter()
+        .map(|&g| Gid(g as u32))
+        .collect();
+    let primary_gid = get_gid();
+
+    if !groups.contains(&primary_gid) {
+        groups.push(primary_gid);
+    }
+
+    Ok(groups)
 }
