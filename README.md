@@ -8,4 +8,5 @@ a privilage escalation program inpired by doas (opendoas) (or based on).
 ## Plan
 ~1. i see "closefrom()" at doas main function, so i tryin to rewrite it implementation in rust first.~  
 ~2. after closefrom the next function that we want to implement are getuid.~  
-3. after getuid (and i do gid and euid too) i came into args parse case  
+~3. after getuid (and i do gid and euid too) i came into args parse case~  
+4. implementing the cosmetic function such a setprogname() in rust.
