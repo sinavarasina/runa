@@ -6,6 +6,15 @@ pub struct Uid(u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Gid(u32);
 
+#[derive(Debug, Clone)]
+pub struct User {
+    pub name: String,
+    pub uid: Uid,
+    pub gid: Gid,
+    pub shell: String,
+    pub dir: String,
+}
+
 impl Uid {
     pub fn new(id: u32) -> Self {
         Self(id)
