@@ -9,4 +9,5 @@ a privilage escalation program inpired by doas (opendoas) (or based on).
 ~1. i see "closefrom()" at doas main function, so i tryin to rewrite it implementation in rust first.~  
 ~2. after closefrom the next function that we want to implement are getuid.~  
 ~3. after getuid (and i do gid and euid too) i came into args parse case~  
-4. Implement User & Group Lookup  
+~4. Implement User & Group Lookup~  
+5. Handle Shell Mode (-s) & Validate Setuid

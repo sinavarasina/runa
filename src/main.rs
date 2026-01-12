@@ -29,8 +29,23 @@ fn main() -> std::io::Result<()> {
     std::println!("Arguments parsed: {:?}", args);
     std::println!("Target user: {:?}", args.user.unwrap_or("root".to_string()));
     std::println!("Command to run: {:?}", args.command);
-
-    let user = sys::user::get_user_by_uid(uid);
+    let user = match sys::user::get_user_by_uid(uid) {
+        Ok(u) => u,
+        Err(e) => {
+            eprintln!("runa: no passwd entry: {}", e);
+            std::process::exit(1);
+        }
+    };
     std::println!("User: {:?}", user);
+
+    let groups = match sys::user::get_groups() {
+        Ok(g) => g,
+        Err(e) => {
+            eprintln!("runa: can't get groups: {}", e);
+            std::process::exit(1);
+        }
+    };
+    std::println!("groups: {:?}", groups);
+
     Ok(())
 }
