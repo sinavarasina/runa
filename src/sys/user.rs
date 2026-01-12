@@ -1,7 +1,9 @@
 use libc::{gid_t, uid_t};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Uid(u32);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Gid(u32);
 
 impl Uid {
