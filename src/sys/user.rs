@@ -1,5 +1,5 @@
 use libc::{gid_t, uid_t};
-use std::ffi::CStr;
+use std::{ffi::CStr, io};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Uid(u32);
@@ -70,5 +70,34 @@ unsafe fn passwd_to_user(pw: libc::passwd) -> User {
         gid: Gid(pw.pw_gid as u32),
         shell: c_str_to_string(pw.pw_shell),
         dir: c_str_to_string(pw.pw_dir),
+    }
+}
+pub fn get_user_by_uid(uid: Uid) -> io::Result<User> {
+    unsafe {
+        let pw_ptr = libc::getpwuid(uid.as_raw());
+
+        if pw_ptr.is_null() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("user with uid {:?} was not found", uid),
+            ));
+        }
+        Ok(passwd_to_user(*pw_ptr))
+    }
+}
+
+pub fn get_user_by_name(name: &str) -> io::Result<User> {
+    let c_name = std::ffi::CString::new(name)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "username contain null bytes"))?;
+    unsafe {
+        let pw_ptr = libc::getpwnam(c_name.as_ptr());
+
+        if pw_ptr.is_null() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("username {} was not found", name),
+            ));
+        }
+        Ok(passwd_to_user(*pw_ptr))
     }
 }

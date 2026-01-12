@@ -30,5 +30,7 @@ fn main() -> std::io::Result<()> {
     std::println!("Target user: {:?}", args.user.unwrap_or("root".to_string()));
     std::println!("Command to run: {:?}", args.command);
 
+    let user = sys::user::get_user_by_uid(uid);
+    std::println!("User: {:?}", user);
     Ok(())
 }
