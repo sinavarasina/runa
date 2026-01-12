@@ -1,5 +1,6 @@
 use libc::STDERR_FILENO;
 
+mod cli;
 mod sys;
 
 fn main() -> std::io::Result<()> {
