@@ -1,4 +1,5 @@
 use libc::{gid_t, uid_t};
+use std::ffi::CStr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Uid(u32);
@@ -53,4 +54,21 @@ pub fn get_gid() -> Gid {
 pub fn get_effective_uid() -> Uid {
     let raw = unsafe { libc::geteuid() };
     Uid(raw)
+}
+
+unsafe fn c_str_to_string(ptr: *const libc::c_char) -> String {
+    if ptr.is_null() {
+        return String::new();
+    }
+    CStr::from_ptr(ptr).to_string_lossy().into_owned()
+}
+
+unsafe fn passwd_to_user(pw: libc::passwd) -> User {
+    User {
+        name: c_str_to_string(pw.pw_name),
+        uid: Uid(pw.pw_uid as u32),
+        gid: Gid(pw.pw_gid as u32),
+        shell: c_str_to_string(pw.pw_shell),
+        dir: c_str_to_string(pw.pw_dir),
+    }
 }
