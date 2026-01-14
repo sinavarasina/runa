@@ -91,5 +91,27 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    let config_path = args
+        .conf_path
+        .as_deref()
+        .unwrap_or("/home/alifatihfh/runa.conf");
+    std::println!("Reading config from {:?}", config_path);
+
+    let _rules = match config::parser::parse_config_file(config_path) {
+        Ok(r) => {
+            std::println!("Parsing success, found {} rules", r.len());
+            if cfg!(debug_assertions) {
+                for (i, rule) in r.iter().enumerate() {
+                    std::println!("Rule #{}: {:#?}", i + 1, rule);
+                }
+            }
+            r
+        }
+        Err(e) => {
+            std::eprintln!("Config Error: {}", e);
+            std::process::exit(1);
+        }
+    };
+
     Ok(())
 }

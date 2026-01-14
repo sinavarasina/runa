@@ -11,4 +11,5 @@ a privilage escalation program inpired by doas (opendoas) (or based on).
 ~3. after getuid (and i do gid and euid too) i came into args parse case~  
 ~4. Implement User & Group Lookup~  
 ~5. Handle Shell Mode (-s) & Validate Setuid~  
-6. Handle Config
+~6. Handle Config~  
+7. Handle Permision Validation and Rule Matching

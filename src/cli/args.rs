@@ -39,7 +39,7 @@ pub fn parse() -> Result<RunaArgs, String> {
         if arg == "--" {
             i += 1;
             if i < args.len() {
-                out.command.split_off(i);
+                let _ = out.command.split_off(i);
                 break;
             }
         }
@@ -83,5 +83,5 @@ pub fn parse() -> Result<RunaArgs, String> {
         i += 1;
     }
 
-    Ok((out))
+    Ok(out)
 }
