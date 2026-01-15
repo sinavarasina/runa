@@ -114,8 +114,26 @@ fn main() -> std::io::Result<()> {
     let cmd_prog = &args.command[0];
     let cmd_args = &args.command[1..];
 
-    let match_result =
-        config::matcher::permit(&rules, &user, &groups, &target_name, cmd_prog, cmd_args);
+    let cmd_resolved = match sys::path::resolve_command(cmd_prog) {
+        Some(p) => p,
+        None => {
+            std::eprintln!("runa: command not found: {}", cmd_prog);
+            std::process::exit(1);
+        }
+    };
+
+    if cfg!(debug_assertions) {
+        std::println!("Path Resolution: '{}' -> '{}'", cmd_prog, cmd_resolved);
+    }
+
+    let match_result = config::matcher::permit(
+        &rules,
+        &user,
+        &groups,
+        &target_name,
+        &cmd_resolved,
+        cmd_args,
+    );
 
     match match_result {
         Some(rule) => {

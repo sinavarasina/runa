@@ -15,9 +15,18 @@ fn expand_tilde(path_str: &str) -> Option<std::path::PathBuf> {
     Some(std::path::PathBuf::from(path_str))
 }
 
-#[cfg(unix)]
+#[cfg(not(unix))]
 fn is_executable(path: &std::path::Path) -> bool {
     path.exists() && path.is_file()
+}
+
+#[cfg(unix)]
+fn is_executable(path: &std::path::Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    if let Ok(metadata) = path.metadata() {
+        return metadata.is_file() && (metadata.permissions().mode() & 0o111 != 0);
+    }
+    false
 }
 
 pub fn resolve_command(cmd: &str) -> Option<String> {
@@ -26,7 +35,7 @@ pub fn resolve_command(cmd: &str) -> Option<String> {
 
     if expanded_cmd.contains('/') {
         let path = &expanded_path;
-        if is_executable(path) {
+        if path.exists() && is_executable(path) {
             return std::fs::canonicalize(path)
                 .ok()
                 .map(|p| p.to_string_lossy().into_owned())
@@ -37,7 +46,7 @@ pub fn resolve_command(cmd: &str) -> Option<String> {
     let path_env = std::env::var_os("PATH")?;
     for path in std::env::split_paths(&path_env) {
         let full_path = path.join(cmd);
-        if is_executable(&full_path) {
+        if full_path.exists() && is_executable(&full_path) {
             return Some(full_path.to_string_lossy().into_owned());
         }
     }
