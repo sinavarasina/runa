@@ -1,11 +1,9 @@
-use libc::STDERR_FILENO;
-
 mod cli;
 mod config;
 mod sys;
 
 fn main() -> std::io::Result<()> {
-    sys::proc::close_from(STDERR_FILENO + 1)?;
+    sys::proc::close_from(libc::STDERR_FILENO + 1)?;
     let uid = sys::user::get_uid();
     std::println!("{:?}", uid);
 
@@ -97,7 +95,7 @@ fn main() -> std::io::Result<()> {
         .unwrap_or("/home/alifatihfh/runa.conf");
     std::println!("Reading config from {:?}", config_path);
 
-    let _rules = match config::parser::parse_config_file(config_path) {
+    let rules = match config::parser::parse_config_file(config_path) {
         Ok(r) => {
             std::println!("Parsing success, found {} rules", r.len());
             if cfg!(debug_assertions) {
@@ -112,6 +110,31 @@ fn main() -> std::io::Result<()> {
             std::process::exit(1);
         }
     };
+
+    let cmd_prog = &args.command[0];
+    let cmd_args = &args.command[1..];
+
+    let match_result =
+        config::matcher::permit(&rules, &user, &groups, &target_name, cmd_prog, cmd_args);
+
+    match match_result {
+        Some(rule) => {
+            match rule.action {
+                config::ast::Action::Permit => {
+                    std::println!("Permit, Matched rule: {:#?}", rule);
+                    // TODO: authentication
+                }
+                config::ast::Action::Deny => {
+                    std::eprintln!("Denied, explicit denied rule found");
+                    std::process::exit(1);
+                }
+            }
+        }
+        None => {
+            std::eprintln!("Denied, no matching rule found");
+            std::process::exit(1);
+        }
+    }
 
     Ok(())
 }

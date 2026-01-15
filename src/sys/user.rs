@@ -1,9 +1,3 @@
-use libc::{gid_t, uid_t};
-use std::{
-    ffi::{CStr, CString},
-    io,
-};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Uid(u32);
 
@@ -24,8 +18,8 @@ impl Uid {
         Self(id)
     }
 
-    pub fn as_raw(&self) -> uid_t {
-        self.0 as uid_t
+    pub fn as_raw(&self) -> libc::uid_t {
+        self.0 as libc::uid_t
     }
 
     pub fn is_root(&self) -> bool {
@@ -38,8 +32,8 @@ impl Gid {
         Self(id)
     }
 
-    pub fn as_raw(&self) -> gid_t {
-        self.0 as gid_t
+    pub fn as_raw(&self) -> libc::gid_t {
+        self.0 as libc::gid_t
     }
 }
 
@@ -63,7 +57,7 @@ unsafe fn c_str_to_string(ptr: *const libc::c_char) -> String {
     if ptr.is_null() {
         return String::new();
     }
-    unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() }
+    unsafe { std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned() }
 }
 
 unsafe fn passwd_to_user(pw: libc::passwd) -> User {
@@ -80,13 +74,13 @@ unsafe fn group_to_gid(grp: libc::group) -> Gid {
     Gid(grp.gr_gid as u32)
 }
 
-pub fn get_user_by_uid(uid: Uid) -> io::Result<User> {
+pub fn get_user_by_uid(uid: Uid) -> std::io::Result<User> {
     unsafe {
         let pw_ptr = libc::getpwuid(uid.as_raw());
 
         if pw_ptr.is_null() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
                 format!("user with uid {:?} was not found", uid),
             ));
         }
@@ -94,15 +88,19 @@ pub fn get_user_by_uid(uid: Uid) -> io::Result<User> {
     }
 }
 
-pub fn get_user_by_name(name: &str) -> io::Result<User> {
-    let c_name = std::ffi::CString::new(name)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "username contain null bytes"))?;
+pub fn get_user_by_name(name: &str) -> std::io::Result<User> {
+    let c_name = std::ffi::CString::new(name).map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "username contain null bytes",
+        )
+    })?;
     unsafe {
         let pw_ptr = libc::getpwnam(c_name.as_ptr());
 
         if pw_ptr.is_null() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
                 format!("username {} was not found", name),
             ));
         }
@@ -110,12 +108,12 @@ pub fn get_user_by_name(name: &str) -> io::Result<User> {
     }
 }
 
-pub fn get_groups() -> io::Result<Vec<Gid>> {
+pub fn get_groups() -> std::io::Result<Vec<Gid>> {
     // i choose 256 as NGROUPS_MAX
-    let mut groups_buffer = vec![0 as gid_t; 256];
+    let mut groups_buffer = vec![0 as libc::gid_t; 256];
     let count = unsafe { libc::getgroups(groups_buffer.len() as i32, groups_buffer.as_mut_ptr()) };
     if count < 0 {
-        return Err(io::Error::last_os_error());
+        return Err(std::io::Error::last_os_error());
     }
     let mut groups: Vec<Gid> = groups_buffer[..count as usize]
         .iter()
@@ -130,15 +128,19 @@ pub fn get_groups() -> io::Result<Vec<Gid>> {
     Ok(groups)
 }
 
-pub fn get_gid_by_name(name: &str) -> io::Result<Gid> {
-    let c_name = CString::new(name)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "group name contain null byte"))?;
+pub fn get_gid_by_name(name: &str) -> std::io::Result<Gid> {
+    let c_name = std::ffi::CString::new(name).map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "group name contain null byte",
+        )
+    })?;
 
     unsafe {
         let grp_ptr = libc::getgrnam(c_name.as_ptr());
         if grp_ptr.is_null() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
                 format!("group '{}' not found", name),
             ));
         }

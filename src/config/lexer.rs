@@ -1,5 +1,3 @@
-use std::{iter::Peekable, str::Chars};
-
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Permit,
@@ -19,7 +17,7 @@ pub enum Token {
 }
 
 pub struct Lexer<'a> {
-    chars: Peekable<Chars<'a>>,
+    chars: std::iter::Peekable<std::str::Chars<'a>>,
     pub line: usize,
 }
 

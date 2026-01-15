@@ -1,5 +1,3 @@
-use std::env;
-
 #[derive(Debug)]
 pub struct RunaArgs {
     pub conf_path: Option<String>,
@@ -24,7 +22,7 @@ impl Default for RunaArgs {
 }
 
 pub fn parse() -> Result<RunaArgs, String> {
-    let mut args: Vec<String> = env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
     let mut out = RunaArgs::default();
 
     let mut i = 0;
