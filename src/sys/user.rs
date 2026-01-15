@@ -1,5 +1,8 @@
 use libc::{gid_t, uid_t};
-use std::{ffi::CStr, io};
+use std::{
+    ffi::{CStr, CString},
+    io,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Uid(u32);
@@ -72,6 +75,11 @@ unsafe fn passwd_to_user(pw: libc::passwd) -> User {
         dir: unsafe { c_str_to_string(pw.pw_dir) },
     }
 }
+
+unsafe fn group_to_gid(grp: libc::group) -> Gid {
+    Gid(grp.gr_gid as u32)
+}
+
 pub fn get_user_by_uid(uid: Uid) -> io::Result<User> {
     unsafe {
         let pw_ptr = libc::getpwuid(uid.as_raw());
@@ -120,4 +128,20 @@ pub fn get_groups() -> io::Result<Vec<Gid>> {
     }
 
     Ok(groups)
+}
+
+pub fn get_gid_by_name(name: &str) -> io::Result<Gid> {
+    let c_name = CString::new(name)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "group name contain null byte"))?;
+
+    unsafe {
+        let grp_ptr = libc::getgrnam(c_name.as_ptr());
+        if grp_ptr.is_null() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("group '{}' not found", name),
+            ));
+        }
+        Ok(group_to_gid(*grp_ptr))
+    }
 }
