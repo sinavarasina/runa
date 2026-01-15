@@ -1,5 +1,3 @@
-#[cfg(unix)]
-
 fn expand_tilde(path_str: &str) -> Option<std::path::PathBuf> {
     if path_str.starts_with("~") {
         if let Ok(home) = std::env::var("HOME") {
