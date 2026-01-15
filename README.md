@@ -3,10 +3,8 @@
 
 a privilage escalation program inpired by doas (opendoas) (or based on).
 
-(i use to tracing the main function of opendoas)
-
 ## Description
-runa is a privilage escalation program with initial target as rewriting opendoas with rust as initial release (v1.0),
+runa is a privilage escalation program with initial target to rewriting opendoas with rust as initial release (v1.0),
 but it doesnt mean to always stick with doas/opendoas.
 
 ## Plan
@@ -16,7 +14,8 @@ but it doesnt mean to always stick with doas/opendoas.
 ~4. Implement User & Group Lookup~  
 ~5. Handle Shell Mode (-s) & Validate Setuid~  
 ~6. Handle Config~  
-7. Handle Permision Validation and Rule Matching
+~7. Handle Permision Validation and Rule Matching~  
+8. Handle Authentication Flow
 
 ## Disclaimer
 i made runa for me to learn to how code in rust, but feel free to open issue (or report to me at varasinafarmadani@gmail.com) for ideas or suggestion, critism, bug, and vulnerability.
