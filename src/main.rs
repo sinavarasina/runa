@@ -5,7 +5,9 @@ mod sys;
 fn main() -> std::io::Result<()> {
     sys::proc::close_from(libc::STDERR_FILENO + 1)?;
     let uid = sys::user::get_uid();
-    std::println!("{:?}", uid);
+    if cfg!(debug_assertions) {
+        std::println!("{:?}", uid);
+    }
 
     let mut args = match cli::args::parse() {
         Ok(a) => a,
@@ -16,7 +18,7 @@ fn main() -> std::io::Result<()> {
         }
     };
 
-    if args.clear_timestamp {
+    if args.clear_timestamp && cfg!(debug_assertions) {
         // TODO: implement the clear_timestamp code later.
         std::println!("clear timestamp triggered");
         std::process::exit(0);
@@ -26,11 +28,11 @@ fn main() -> std::io::Result<()> {
         std::eprintln!("Usage: runa [arguments] command");
         std::process::exit(1);
     }
-
-    std::println!("Arguments parsed: {:?}", args);
-    std::println!("Target user: {:?}", args.user.as_deref().unwrap_or("root"));
-    std::println!("Command to run: {:?}", args.command);
-
+    if cfg!(debug_assertions) {
+        std::println!("Arguments parsed: {:?}", args);
+        std::println!("Target user: {:?}", args.user.as_deref().unwrap_or("root"));
+        std::println!("Command to run: {:?}", args.command);
+    }
     let user = match sys::user::get_user_by_uid(uid) {
         Ok(u) => u,
         Err(e) => {
@@ -38,8 +40,9 @@ fn main() -> std::io::Result<()> {
             std::process::exit(1);
         }
     };
-    std::println!("User: {:?}", user);
-
+    if cfg!(debug_assertions) {
+        std::println!("User: {:?}", user);
+    }
     let groups = match sys::user::get_groups() {
         Ok(g) => g,
         Err(e) => {
@@ -47,8 +50,9 @@ fn main() -> std::io::Result<()> {
             std::process::exit(1);
         }
     };
-    std::println!("groups: {:?}", groups);
-
+    if cfg!(debug_assertions) {
+        std::println!("groups: {:?}", groups);
+    }
     let target_name = args.user.clone().unwrap_or_else(|| "root".to_string());
 
     let target_user = match sys::user::get_user_by_name(&target_name) {
@@ -93,12 +97,13 @@ fn main() -> std::io::Result<()> {
         .conf_path
         .as_deref()
         .unwrap_or("/home/alifatihfh/runa.conf");
-    std::println!("Reading config from {:?}", config_path);
-
+    if cfg!(debug_assertions) {
+        std::println!("Reading config from {:?}", config_path);
+    }
     let rules = match config::parser::parse_config_file(config_path) {
         Ok(r) => {
-            std::println!("Parsing success, found {} rules", r.len());
             if cfg!(debug_assertions) {
+                std::println!("Parsing success, found {} rules", r.len());
                 for (i, rule) in r.iter().enumerate() {
                     std::println!("Rule #{}: {:#?}", i + 1, rule);
                 }
@@ -139,7 +144,9 @@ fn main() -> std::io::Result<()> {
         Some(rule) => {
             match rule.action {
                 config::ast::Action::Permit => {
-                    std::println!("Permit, Matched rule: {:#?}", rule);
+                    if cfg!(debug_assertions) {
+                        std::println!("Permit, Matched rule: {:#?}", rule);
+                    }
                     // TODO: authentication
                 }
                 config::ast::Action::Deny => {
