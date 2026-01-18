@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 libc = { version = "0.2.180", features = ["extra_traits"] }
+pam = "0.8.0"
